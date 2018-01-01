@@ -1,9 +1,36 @@
 import xmltodict
 import pprint
 import json
-import pymongo
+import configparser
+import sys
 from pymongo import MongoClient
 
+
+def load_configuration_file(filename):
+
+   config_defaults = {'database_host': '127.0.0.1',
+                                   'database_port': 27017,
+                                   'database_user': '',
+                                   'database_password': '',
+                                   'database_name': 'config-database'
+                     }
+
+   config = configparser.ConfigParser(config_defaults)
+   try:
+      f = open(filename)
+   except OSError:
+      print("Can't open config file: ", filename ," ", sys.exc_info()[0])
+      quit()
+   try:
+     config.read_file(f)
+   except Error:
+    print("Unexpected error:", sys.exc_info()[0])
+    quit()
+
+   print(config.get('database','database_host'))
+   print(config.write(sys.stdout))
+
+# end of load_configuration_file()
 
 def config_iterator(config_dict, database_export_dict, depth):
     # yes, I know how wastefull such recursion is
@@ -45,6 +72,9 @@ def config_iterator(config_dict, database_export_dict, depth):
 #### --- Main() --- ####
 
 pp = pprint.PrettyPrinter(indent=1)
+
+load_configuration_file('parse.conf')
+
 
 file_h = open('asr04.shl.xml', 'r')
 config_dict = xmltodict.parse(file_h.read())['Device-Configuration']
