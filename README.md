@@ -5,7 +5,7 @@ One day this may become a script to upload XML config collected from Cisco ASR10
 
 At the momemnt is just me playing with GitHubo
 
-Dependancies:
+Dependencies:
 * python3
 
 

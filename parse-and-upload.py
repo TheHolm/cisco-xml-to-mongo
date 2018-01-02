@@ -3,10 +3,22 @@ import pprint
 import json
 import configparser
 import sys
+import argparse
 from pymongo import MongoClient
 
+def parse_command_line():
+  # hha [-c config file ] cisco_config.xml 
+  # --config -c config file name - default is parse.conf
+   parser = argparse.ArgumentParser(description='Parce Cisco config in XML form and upload it to MongoDB.')
+   parser.add_argument('-c', '--config', type=argparse.FileType('r'), nargs='?',default='parse.conf', help='%(prog)s configuration file')
+   parser.add_argument(metavar='configuration_file.xml', dest='input_file', type=argparse.FileType('r'), help='Cisco router config in XML format "sh run | format xml"')
+   parser.add_argument('-v','--version', action='version', version='%(prog)s 0.01')
+   args = parser.parse_args()
+   return args
 
-def load_configuration_file(filename):
+#end of parse_command_line()
+
+def load_configuration_file(config_file_handler):
 
    config_defaults = {'database_host': '127.0.0.1',
                                    'database_port': 27017,
@@ -17,18 +29,10 @@ def load_configuration_file(filename):
 
    config = configparser.ConfigParser(config_defaults)
    try:
-      f = open(filename)
-   except OSError:
-      print("Can't open config file: ", filename ," ", sys.exc_info()[0])
-      quit()
-   try:
-     config.read_file(f)
+     config.read_file(config_file_handler)
    except Error:
     print("Unexpected error:", sys.exc_info()[0])
-    quit()
-
-   print(config.get('database','database_host'))
-   print(config.write(sys.stdout))
+    quit(1)
 
 # end of load_configuration_file()
 
@@ -73,10 +77,12 @@ def config_iterator(config_dict, database_export_dict, depth):
 
 pp = pprint.PrettyPrinter(indent=1)
 
-load_configuration_file('parse.conf')
+args = parse_command_line()
+
+load_configuration_file(vars(args)['config'])
 
 
-file_h = open('asr04.shl.xml', 'r')
+file_h = vars(args)['input_file']
 config_dict = xmltodict.parse(file_h.read())['Device-Configuration']
 
 database_client = MongoClient()
